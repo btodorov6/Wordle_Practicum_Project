@@ -21,5 +21,11 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="words.txt" />
+    <Text Include="users.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Wordle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -126,7 +126,11 @@
     <ClCompile Include="Wordle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="users.txt" />
     <Text Include="words.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Wordle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
