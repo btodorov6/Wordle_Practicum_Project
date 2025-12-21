@@ -1,3 +1,7 @@
 administrator-Adminpassword123
-username-Password123bobi-bobiParola4
+username-Password123
+bobi-bobiParola4
 Boris-BorisPass123
+dido-Malkapishka123
+novpotrebitel-Parolanova123
+oshteedinuser-parolaAAA
