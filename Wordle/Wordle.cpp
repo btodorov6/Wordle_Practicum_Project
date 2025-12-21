@@ -2,10 +2,22 @@
 #include <fstream>
 #include <cstdlib>
 using namespace std;
-const int wordLength = 5;
+const int WORD_LENGTH = 5;
+const char* GREEN = "\033[42m";
+const char* YELLOW = "\033[43m";
+const char* RED = "\033[41m";
+const char* RESET = "\033[0m";
+char makeCharCapital(char c)
+{
+    if (c >= 'a' && c <= 'z')
+    {
+        return c - 'a' + 'A';
+    }
+    return c;
+}
 void printCharArr(char* arr)
 {
-    for (int i = 0;i < wordLength;i++)
+    for (int i = 0;i < WORD_LENGTH;i++)
     {
         cout << arr[i];
     }
@@ -13,7 +25,7 @@ void printCharArr(char* arr)
 }
 bool isCharContainedInArr(char c,char* arr)
 {
-    for (int i = 0;i < wordLength;i++)
+    for (int i = 0;i < WORD_LENGTH;i++)
     {
         if (arr[i] == c)
         {
@@ -33,13 +45,17 @@ void printLoseText(char* correctWord)
 }
 void enterUserWord(char* userWord)
 {
-    cin.getline(userWord, wordLength+1);
-    userWord[wordLength] = '\0';
+    cin.getline(userWord, WORD_LENGTH + 1);
+    for (int i = 0; i < WORD_LENGTH; i++)
+    {
+        userWord[i] = makeCharCapital(userWord[i]);
+    }
+    userWord[WORD_LENGTH] = '\0';
 }
-bool areStringsEqual(char* userWord,char* targetWord,char* hints)
+bool areStringsEqual(char* userWord, char* targetWord, char* hints)
 {
     bool isTrue = true;
-    for (int i = 0;i < wordLength;i++)
+    for (int i = 0; i < WORD_LENGTH; i++)
     {
         if (userWord[i] != targetWord[i])
         {
@@ -58,7 +74,23 @@ bool areStringsEqual(char* userWord,char* targetWord,char* hints)
             hints[i] = 'g';
         }
     }
-    printCharArr(hints);
+
+    for (int i = 0; i < WORD_LENGTH; i++)
+    {
+        if (hints[i] == 'g')
+        {
+            cout << GREEN << userWord[i] << RESET;
+        }
+        else if (hints[i] == 'y')
+        {
+            cout << YELLOW << userWord[i] << RESET;
+        }
+        else
+        {
+            cout << RED << userWord[i] << RESET;
+        }
+    }
+    cout << endl;
     return isTrue;
 }
 void printStartingScreen()
@@ -117,14 +149,14 @@ void chooseRandomWordFromFile(char* word)
     {
         wordFile >> word;
     }
-    word[wordLength] = '\0';
+    word[WORD_LENGTH] = '\0';
     wordFile.close();
 }
 int main()
 {
     srand(time(0));
     printStartingScreen();
-    char wordToGuess[wordLength + 1];
+    char wordToGuess[WORD_LENGTH + 1];
     bool isProgramFinished = false;
     int chooseStartingOperation = 0;
     do {
@@ -134,8 +166,8 @@ int main()
     } while (startingInput(chooseStartingOperation, isProgramFinished));
     if (!isProgramFinished)
     {
-        char userWord[wordLength + 1];
-        char hints[wordLength + 1];
+        char userWord[WORD_LENGTH + 1];
+        char hints[WORD_LENGTH + 1];
         chooseRandomWordFromFile(wordToGuess);
         for (int i = 0;i < 6;i++)
         {

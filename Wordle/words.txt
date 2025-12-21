@@ -1,5 +1,5 @@
-apple
-beach
-chair
-dance
-eagle
+APPLE
+BEACH
+CHAIR
+DANCE
+EAGLE
