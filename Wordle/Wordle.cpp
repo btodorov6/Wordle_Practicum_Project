@@ -210,16 +210,23 @@ void registerFunc()
     bool isPasswordValid = false;
     char username[17];
     char password[17];
-    char userFileInfo[32];
+    char userFileInfo[34];
     cout << BOLD << ".REGISTERING NEW USER." << RESET << endl;
-    cout << RED_LETTERS << "Username must be between 3 - 16 characters long!" << endl;
-    cout << "Password must be more than 8 characters and include a capital letter!" << RESET << endl;
+    cout << RED_LETTERS << "Username must be between 3 - 16 letters!" << endl;
+    cout << "Password must be between 8 - 16 letters and include a capital letter!" << RESET << endl;
     while (!isUsernameValid)
     {
         cout << "Enter username: ";
-        cin.getline(username, 17);
+        if (!cin.getline(username, 17))
+        {
+            cout << RED_LETTERS << "Username too long!"<<RESET<<endl;
+            cin.clear();
+            cin.ignore(1000, '\n');
+            continue;
+        }
+
         if (getLengthOfString(username) < 3) {
-            cout << RED_LETTERS << "Username too short" << RESET << endl;
+            cout << RED_LETTERS << "Username too short!" << RESET << endl;
             continue;
         }
         bool exists = false;
@@ -249,13 +256,28 @@ void registerFunc()
     }
     while (!isPasswordValid)
     {
+        isPasswordValid = true;
         cout << "Enter password: ";
-        cin.getline(password, 17);
-        if (getLengthOfString(password) >= 8 && doesStringHaveCapitalLetter(password)) {
-            isPasswordValid = true;
+        if (!cin.getline(password, 17))
+        {
+            cout << RED_LETTERS << "Password too long! ";
+            cin.clear();
+            cin.ignore(1000, '\n');
+            isPasswordValid = false;
         }
-        else {
-            cout << RED_LETTERS << "Invalid Password" << RESET << endl;
+        else if (getLengthOfString(password) < 8)
+        {
+            cout << RED_LETTERS << "Password too short! ";
+            isPasswordValid = false;
+        }
+        if (!doesStringHaveCapitalLetter(password))
+        {
+            cout << RED_LETTERS << "Password must have capital letters!";
+            isPasswordValid = false;
+        }
+        if (!isPasswordValid)
+        {
+            cout << RESET << endl;
         }
     }
     usersFile.clear();
@@ -270,7 +292,7 @@ void loginFunc(bool& isAdmin)
     bool isUsernameFound = false, isPasswordCorrect = false;
     char username[17];
     char password[17];
-    char existingUserInformation[32];
+    char existingUserInformation[34];
     char existingUsername[17];
     char existingPassword[17];
     cout << BOLD << ".LOGGING IN EXISTING USER." << RESET << endl;
