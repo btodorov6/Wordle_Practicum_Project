@@ -16,8 +16,19 @@ const char* BOLD = "\033[1m";
 const char* BlINKING_BLACK = "\033[5;40m";
 const char* BlINKING_RED_LETTERS = "\033[5;31m";
 const char* GREEN_LETTERS = "\033[92m";
+const char* BLUE_LETTERS = "\033[94m";
 const char* UNDERLINE = "\033[4m";
+const char* ERASE_LINE = "\033[1A\033[2K";
+const char* CLEAR_SCREEN = "\033[2J\033[H";
 
+void invalidInput()
+{
+    cout << RED_LETTERS << "Input is invalid. Choose a number between 1 and 3 from the options above." << RESET << endl;
+}
+void exitFunc()
+{
+    cout << BlINKING_RED_LETTERS << "Exiting Program..." << RESET << endl;
+}
 int getLengthOfString(char* arr)
 {
     int counter = 0;
@@ -42,7 +53,19 @@ bool areStringsSame(char* str1, char* str2)
 }
 void adminCommands(int& adminInput)
 {
-    
+    switch (adminInput)
+    {
+    case 1:
+        break;
+    case 2:
+        break;
+    case 3:
+        exitFunc();
+        break;
+    default:
+        invalidInput();
+        break;
+    }
 }
 bool doesStringHaveCapitalLetter(char* str)
 {
@@ -85,12 +108,13 @@ bool isCharContainedInArr(char c, char* arr)
 }
 void printWinText()
 {
-    cout << "You guessed the word";
+    cout << GREEN_LETTERS << "You guessed the word" << RESET;
 }
 void printLoseText(char* correctWord)
 {
-    cout << "You ran out of attempts. The word was - ";
+    cout <<RED_LETTERS<< "You ran out of attempts. The word was - ";
     printCharArr(correctWord);
+    cout << RESET;
 }
 void enterUserWord(char* userWord)
 {
@@ -100,6 +124,7 @@ void enterUserWord(char* userWord)
         cin.getline(userWord, 32);
         if (getLengthOfString(userWord) != 5)
         {
+            cout << ERASE_LINE;
             cout << RED_LETTERS << "Word must be exactly 5 letters!" << RESET << endl;
         }
         else
@@ -135,7 +160,7 @@ bool areStringsEqual(char* userWord, char* targetWord, char* hints, int i)
             hints[i] = 'g';
         }
     }
-
+    cout << ERASE_LINE;
     for (int i = 0; i < WORD_LENGTH; i++)
     {
         if (hints[i] == 'g')
@@ -151,13 +176,13 @@ bool areStringsEqual(char* userWord, char* targetWord, char* hints, int i)
             cout << RED << userWord[i] << RESET;
         }
     }
-    if (isTrue == false)
+    if (isTrue == false && i < 7)
         cout << endl << BOLD << UNDERLINE << "ROUND" << RESET << BOLD << ' ' << i << RESET << endl;
     else
         cout << endl;
     return isTrue;
 }
-void printStartingScreen()
+void printASCIIart()
 {
     cout << BlINKING_BLACK
         << " __          ______  _____  _____  _      ______ " << endl
@@ -166,13 +191,11 @@ void printStartingScreen()
         << "   \\ \\/  \\/ /| |  | |  _  /| |  | | |    |  __|  " << endl
         << "    \\  /\\  / | |__| | | \\ \\| |__| | |____| |____ " << endl
         << "     \\/  \\/   \\____/|_|  \\_\\_____/|______|______|" << RESET << endl << endl;
-    cout << "1.Login as an existing user." << endl;
-    cout << "2.Register a new user." << endl;
-    cout << "3.Exit Program" << endl;
 }
-void invalidInput()
+void printStartingScreen()
 {
-    cout << "Input is invalid. Choose a number between 1 and 3." << endl;
+    printASCIIart();
+    cout <<GREEN_LETTERS<< "1.Login as an existing user." << endl<< "2.Register a new user."<<RESET<<endl<< BlINKING_RED_LETTERS<< "3.Exit Program"<<RESET << endl;
 }
 void exitFunc(bool& finishProgram)
 {
@@ -278,7 +301,6 @@ void loginFunc(bool& isAdmin)
                 break;
             }
         }
-
         if (!isUsernameFound)
         {
             cout << RED_LETTERS << "No such user exists. Try again." << RESET << endl;
@@ -299,15 +321,17 @@ void loginFunc(bool& isAdmin)
             cout<< RED_LETTERS << "Incorrect password. Try again" << RESET << endl;
         }
     }
-    
-    cout << "Succesfully logged in as ";
+    cout << CLEAR_SCREEN;
+    printASCIIart();
+    cout << "Succesfully logged in as "<<BLUE_LETTERS;
     if (areStringsSame(username, (char*)"administrator"))
     {
-        cout << "admin" << endl;
+        cout << "admin";
         isAdmin = true;
     }
     else
-        cout << username << endl;
+        cout << username;
+    cout << RESET << endl;
     usersFile.close();
 }
 
@@ -317,10 +341,7 @@ bool startingInput(const int n, bool& finishProgram, bool& isAdmin)
     {
     case 1:
         loginFunc(isAdmin);
-        if (isAdmin)
-            return true;
-        else
-            return false;
+        return false;
     case 2:
         registerFunc();
         return false;
@@ -357,13 +378,14 @@ int main()
     do {
         cout << "Enter your input: ";
         cin >> chooseStartingOperation;
-        cin.ignore();
+        cin.clear();
+        cin.ignore(1000, '\n');
     } while (startingInput(chooseStartingOperation, isProgramFinished, isAdmin));
 
     if (!isProgramFinished && !isAdmin)
     {
         cout << BOLD << "GUESS THE WORD" << endl << UNDERLINE << "ROUND" << RESET << BOLD << " 1" << RESET << endl;
-        char userWord[WORD_LENGTH + 1];
+        char userWord[32];
         char hints[WORD_LENGTH + 1];
         chooseRandomWordFromFile(wordToGuess);
         for (int i = 0; i < 6; i++)
@@ -385,12 +407,13 @@ int main()
     if (isAdmin)
     {
         int adminInput = 0;
-        cout << BOLD << "You have logged in as an admin." << RESET << endl;
+        cout <<BLUE_LETTERS<< "1.Add new words" << endl << "2.Look at the leaderboard"<<RESET << endl<<BlINKING_RED_LETTERS << "3.Exit program" <<RESET<< endl;
         while (adminInput != 3)
         {
-            cout << "1.Add new words" << endl << "2.Look at the leaderboard" << endl << "3.Exit program" << endl;
             cout << "Enter your input: ";
             cin >> adminInput;
+            cin.clear();
+            cin.ignore(1000, '\n');
             adminCommands(adminInput);
         }
     }
