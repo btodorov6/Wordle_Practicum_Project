@@ -543,7 +543,14 @@ bool startingInput(const int n, bool& finishProgram, bool& isAdmin)
 void chooseRandomWordFromFile(char* word)
 {
     ifstream wordFile("words.txt");
-    int wordCount = 5;
+    int wordCount = 0;
+    char tempWord[6] = "";
+    while (wordFile >> tempWord)
+    {
+        wordCount++;
+    }
+    wordFile.clear();
+    wordFile.seekg(0, ios::beg);
     int num = (rand() % wordCount) + 1;
     for (int i = 0; i < num; i++)
     {

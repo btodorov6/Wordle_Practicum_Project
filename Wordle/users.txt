@@ -8,3 +8,4 @@ oshteedinuser-parolaAAA
 password-Username
 user123-Passofuser123
 nainovpotrebitel-SilnaParola
+Cod71-Password
