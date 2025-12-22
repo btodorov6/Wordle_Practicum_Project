@@ -2,6 +2,8 @@
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
+#include <cstdio>
+
 using namespace std;
 using std::cout;
 using std::cin;
@@ -97,8 +99,7 @@ void addWords(char* wordsAdded)
         }
         if (exists)
         {
-            cout << ERASE_LINE;
-            cout << ERASE_LINE;
+            cout << ERASE_LINE << ERASE_LINE;
             cout << RED_LETTERS << "Such a word already exists" << RESET << endl;
         }
         else
@@ -128,7 +129,71 @@ void addWords(char* wordsAdded)
 }
 void removeWords(char* wordsRemoved)
 {
-    cout << "removing words..."<<endl;
+    ifstream wordsFile("words.txt");
+    ofstream tempFile("temp.txt");
+    char existingWord[6], wordToRemove[32];
+    bool isWordValid = false;
+    while (!isWordValid)
+    {
+        cout << "Enter word to remove: " << endl;
+        enterUserWord(wordToRemove);
+
+        bool exists = false;
+        wordsFile.clear();
+        wordsFile.seekg(0, ios::beg);
+        while (wordsFile >> existingWord)
+        {
+            if (areStringsSame(existingWord, wordToRemove))
+            {
+                exists = true;
+                break;
+            }
+        }
+        if (exists)
+        {
+            wordsFile.clear();
+            wordsFile.seekg(0, ios::beg);
+            bool firstWord = true;
+            while (wordsFile >> existingWord)
+            {
+                if (!areStringsSame(existingWord, wordToRemove))
+                {
+                    if (!firstWord)
+                    {
+                        tempFile << endl;
+                    }
+                    tempFile << existingWord;
+                    firstWord = false;
+                }
+            }
+            wordsFile.close();
+            tempFile.close();
+            remove("words.txt");
+            rename("temp.txt", "words.txt");
+
+            cout << BLUE_LETTERS << wordToRemove << RESET << GREEN_LETTERS << " successfully removed." << RESET << endl;
+            int i = 0, j = 0;
+            while (wordsRemoved[i] != '\0')
+            {
+                ++i;
+            }
+            while (wordToRemove[j] != '\0')
+            {
+                wordsRemoved[i] = wordToRemove[j];
+                ++i;
+                ++j;
+            }
+            wordsRemoved[i] = ' ';
+            wordsRemoved[i + 1] = '\0';
+
+            isWordValid = true;
+        }
+        else
+        {
+            cout << ERASE_LINE << ERASE_LINE;
+            cout << RED_LETTERS << "No such word exists in the list" << RESET << endl;
+        }
+    }
 }
 void modifyWords(char* wordsAdded,char* wordsRemoved)
 {
