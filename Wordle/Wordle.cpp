@@ -25,6 +25,43 @@ const char* UNDERLINE = "\033[4m";
 const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
+const char* YELLOW_LETTERS = "\033[38;5;220m";
+void displayLeaderboard()
+{
+    ifstream leaderboardFile("leaderboard.txt");
+    char wholeLine[32];
+    while (leaderboardFile >> wholeLine)
+    {
+        int i = 0;
+        cout << BLUE_LETTERS;
+        while (wholeLine[i] != '-')
+        {
+            cout << wholeLine[i];
+            i++;
+        }
+        cout << RESET;
+        i++;
+        cout <<"|" << YELLOW_LETTERS << "Games played - " << RESET;
+        cout << BLUE_LETTERS;
+        while (wholeLine[i] != '/')
+        {
+            cout << wholeLine[i];
+            i++;
+        }
+        cout << RESET;
+        cout<<"|" << GREEN_LETTERS << "Wins - " << RESET;
+        i++;
+        cout << BLUE_LETTERS;
+        while (wholeLine[i] != '\0')
+        {
+            cout << wholeLine[i];
+            i++;
+        }
+        cout << RESET;
+        cout << endl;
+    }
+
+}
 int getLengthOfString(char* arr)
 {
     int counter = 0;
@@ -71,7 +108,7 @@ int convertCharArrToInteger(char* arr)
 }
 void updateLeaderboards(char* username, bool hasWon)
 {
-    fstream leaderboardFile("leaderboard.txt");
+    ifstream leaderboardFile("leaderboard.txt");
     ofstream tempFile("temp.txt");
     bool isOperationCompleted = false;
     if (!leaderboardFile)
@@ -437,6 +474,7 @@ void printASCIIart()
 void printStartingScreen()
 {
     printASCIIart();
+    displayLeaderboard();
     cout <<DARK_GREEN_LETTERS<< "1.Login as an existing user." << endl<< "2.Register a new user."<<RESET<<endl<< DARK_RED_LETTERS<< "3.Exit Program"<<RESET << endl;
 }
 void printAdminCommands(char* wordsAdded,char* wordsRemoved)
