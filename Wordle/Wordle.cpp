@@ -25,6 +25,39 @@ const char* UNDERLINE = "\033[4m";
 const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
+void updateLeaderboards(char* username, bool hasWon)
+{
+    fstream leaderboardFile("leaderboard.txt",ios::in | ios::out | ios::app);
+    ofstream tempFile("temp.txt");
+    char existingUser[17];
+    bool isOperationCompleted = false;
+    while (!isOperationCompleted)
+    {
+        bool isUserFound = false;
+        leaderboardFile.clear();
+        leaderboardFile.seekg(0,ios::beg);
+        while (leaderboardFile >> existingUser)
+        {
+            if (areStringsSame(existingUser, username))
+            {
+                isUserFound = true;
+                break;
+            }
+        }
+        leaderboardFile.clear();
+        if (isUserFound)
+        {
+            //add points and copy over updated info to temp and then delete leaderboard and rename temp
+        }
+        else
+        {
+            tempFile.close();
+            leaderboardFile << endl;
+            leaderboardFile << username << "-1/" << hasWon;
+            leaderboardFile.close();
+        }
+    }
+}
 int getLengthOfString(char* arr)
 {
     int counter = 0;
@@ -372,12 +405,11 @@ void exitFunc(bool& finishProgram)
     finishProgram = true;
     cout << BlINKING_RED_LETTERS << "Exiting Program..." << RESET << endl;
 }
-void registerFunc()
+void registerFunc(char* username)
 {
     fstream usersFile("users.txt", ios::in | ios::out | ios::app);
     bool isUsernameValid = false;
     bool isPasswordValid = false;
-    char username[17];
     char password[17];
     char userFileInfo[34];
     cout << BOLD << ".REGISTERING NEW USER." << RESET << endl;
@@ -456,11 +488,10 @@ void registerFunc()
     cout << GREEN_LETTERS << "You registered successfully as " << RESET << BLUE_LETTERS << username << RESET << endl;
     usersFile.close();
 }
-void loginFunc(bool& isAdmin)
+void loginFunc(bool& isAdmin, char* username)
 {
     ifstream usersFile("users.txt");
     bool isUsernameFound = false, isPasswordCorrect = false;
-    char username[17];
     char password[17];
     char existingUserInformation[34];
     char existingUsername[17];
@@ -522,15 +553,15 @@ void loginFunc(bool& isAdmin)
     cout << "Succesfully logged in as "<<BLUE_LETTERS<<username<<RESET<<endl;
     usersFile.close();
 }
-bool startingInput(const int n, bool& finishProgram, bool& isAdmin)
+bool startingInput(const int n, bool& finishProgram, bool& isAdmin, char* username)
 {
     switch (n)
     {
     case 1:
-        loginFunc(isAdmin);
+        loginFunc(isAdmin,username);
         return false;
     case 2:
-        registerFunc();
+        registerFunc(username);
         return false;
     case 3:
         exitFunc(finishProgram);
@@ -567,13 +598,13 @@ int main()
     char wordToGuess[WORD_LENGTH + 1];
     bool isProgramFinished = false, isAdmin = false;
     int chooseStartingOperation = 0;
-
+    char username[17];
     do {
         cout << "Enter your input: ";
         cin >> chooseStartingOperation;
         cin.clear();
         cin.ignore(1000, '\n');
-    } while (startingInput(chooseStartingOperation, isProgramFinished, isAdmin));
+    } while (startingInput(chooseStartingOperation, isProgramFinished, isAdmin, username));
 
     if (!isProgramFinished && !isAdmin)
     {
@@ -586,11 +617,13 @@ int main()
             enterUserWord(userWord);
             if (areStringsEqual(userWord, wordToGuess, hints, i + 2))
             {
+                updateLeaderboards(username, true);
                 printWinText();
                 break;
             }
             else if (i == 5)
             {
+                updateLeaderboards(username, false);
                 printLoseText(wordToGuess);
                 break;
             }
