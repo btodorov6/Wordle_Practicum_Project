@@ -25,39 +25,6 @@ const char* UNDERLINE = "\033[4m";
 const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
-void updateLeaderboards(char* username, bool hasWon)
-{
-    fstream leaderboardFile("leaderboard.txt",ios::in | ios::out | ios::app);
-    ofstream tempFile("temp.txt");
-    char existingUser[17];
-    bool isOperationCompleted = false;
-    while (!isOperationCompleted)
-    {
-        bool isUserFound = false;
-        leaderboardFile.clear();
-        leaderboardFile.seekg(0,ios::beg);
-        while (leaderboardFile >> existingUser)
-        {
-            if (areStringsSame(existingUser, username))
-            {
-                isUserFound = true;
-                break;
-            }
-        }
-        leaderboardFile.clear();
-        if (isUserFound)
-        {
-            //add points and copy over updated info to temp and then delete leaderboard and rename temp
-        }
-        else
-        {
-            tempFile.close();
-            leaderboardFile << endl;
-            leaderboardFile << username << "-1/" << hasWon;
-            leaderboardFile.close();
-        }
-    }
-}
 int getLengthOfString(char* arr)
 {
     int counter = 0;
@@ -66,14 +33,6 @@ int getLengthOfString(char* arr)
         counter++;
     }
     return counter;
-}
-char makeCharCapital(char c)
-{
-    if (c >= 'a' && c <= 'z')
-    {
-        return c - 'a' + 'A';
-    }
-    return c;
 }
 bool areStringsSame(char* str1, char* str2)
 {
@@ -87,6 +46,105 @@ bool areStringsSame(char* str1, char* str2)
         if (str1[i] != str2[i]) return false;
     }
     return true;
+}
+int powerOfTen(int power)
+{
+    int num = 1;
+    while (power > 0)
+    {
+        num *= 10;
+        power--;
+    }
+    return num;
+}
+int convertCharArrToInteger(char* arr)
+{
+    int value = 0, i=0;
+    int length = getLengthOfString(arr);
+    while (arr[i] != '\0')
+    {
+        value += (arr[i] - 48) * powerOfTen(length-1);
+        length--;
+        i++;
+    }
+    return value;
+}
+void updateLeaderboards(char* username, bool hasWon)
+{
+    fstream leaderboardFile("leaderboard.txt");
+    ofstream tempFile("temp.txt");
+    bool isOperationCompleted = false;
+    if (!leaderboardFile)
+    {
+        tempFile << username << "-1/" << (hasWon ? 1 : 0) << endl;
+        tempFile.close();
+        (void)rename("temp.txt", "leaderboard.txt");
+        return;
+    }
+    char wholeLine[32];
+    char existingUser[17];
+    bool isUserFound = false;
+    while (leaderboardFile >> wholeLine)
+    {
+        int i = 0;
+        while (wholeLine[i] != '-')
+        {
+            existingUser[i] = wholeLine[i];
+            i++;
+        }
+        existingUser[i] = '\0';
+        if (areStringsSame(existingUser, username))
+        {
+            isUserFound = true;
+            i++;
+            char gamesPlayedStr[5];
+            int j = 0;
+            while (wholeLine[i] != '/')
+            {
+                gamesPlayedStr[j] = wholeLine[i];
+                ++j;++i;
+            }
+            gamesPlayedStr[j] = '\0';
+            int gamesPlayed = convertCharArrToInteger(gamesPlayedStr);
+            gamesPlayed++;
+            char winsString[5];
+            i++;
+            j = 0;
+            while (wholeLine[i] != '\0')
+            {
+                winsString[j] = wholeLine[i];
+                ++j;
+                ++i;
+            }
+            winsString[j] = '\0';
+            int winsTotal = convertCharArrToInteger(winsString);
+            if (hasWon)
+                winsTotal++;
+            tempFile << username << "-" << gamesPlayed << "/" << winsTotal << endl;
+            break;
+        }
+        else
+        {
+            tempFile << wholeLine << endl;
+        }
+    }
+    leaderboardFile.clear();
+    if (!isUserFound)
+    {
+        tempFile << username << "-1/" << (hasWon ? 1 : 0) << endl;
+    }
+    leaderboardFile.close();
+    tempFile.close();
+    remove("leaderboard.txt");
+    (void)rename("temp.txt", "leaderboard.txt");
+}
+char makeCharCapital(char c)
+{
+    if (c >= 'a' && c <= 'z')
+    {
+        return c - 'a' + 'A';
+    }
+    return c;
 }
 void enterUserWord(char* userWord)
 {
@@ -202,7 +260,7 @@ void removeWords(char* wordsRemoved)
             wordsFile.close();
             tempFile.close();
             remove("words.txt");
-            rename("temp.txt", "words.txt");
+            (void)rename("temp.txt", "words.txt");
 
             cout << BLUE_LETTERS << wordToRemove << RESET << GREEN_LETTERS << " successfully removed." << RESET << endl;
             int i = 0, j = 0;
