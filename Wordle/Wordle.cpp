@@ -26,6 +26,10 @@ const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
 const char* YELLOW_LETTERS = "\033[38;5;220m";
+void sortLeaderboard()
+{
+    //sorting logic
+}
 void displayLeaderboard()
 {
     ifstream leaderboardFile("leaderboard.txt");
@@ -158,7 +162,6 @@ void updateLeaderboards(char* username, bool hasWon)
             if (hasWon)
                 winsTotal++;
             tempFile << username << "-" << gamesPlayed << "/" << winsTotal << endl;
-            break;
         }
         else
         {

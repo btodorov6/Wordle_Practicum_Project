@@ -126,6 +126,7 @@
     <ClCompile Include="Wordle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="leaderboard.txt" />
     <Text Include="users.txt" />
     <Text Include="words.txt" />
   </ItemGroup>

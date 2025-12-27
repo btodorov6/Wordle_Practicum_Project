@@ -22,5 +22,6 @@
   <ItemGroup>
     <Text Include="words.txt" />
     <Text Include="users.txt" />
+    <Text Include="leaderboard.txt" />
   </ItemGroup>
 </Project>
