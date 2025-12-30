@@ -40,9 +40,38 @@ int getInfoFromLine(char* wholeLine, char* neededInfo, int startIndex, char endC
         return startIndex + 1;
     return startIndex;
 }
-void sortLeaderboard()
+void sortByWinCount()
 {
-    //sorting logic
+    //sort by wc
+}
+void sortByWinRate()
+{
+    //sort by wr
+}
+void flipRanking()
+{
+    ifstream leaderboard("leaderboard.txt");
+    ofstream temp("temp.txt");
+    int linesCount = 0;
+    char leaderboardStrings[100][32];
+    while (leaderboard >> leaderboardStrings[linesCount])
+    {
+        ++linesCount;
+    }
+    leaderboard.close();
+    for (int i = linesCount - 1;i >= 0;i--)
+    {
+        temp << leaderboardStrings[i] << endl;
+    }
+    temp.close();
+    remove("leaderboard.txt");
+    (void)rename("temp.txt", "leaderboard.txt");
+}
+void sortLeaderboard(void (*sort)(), void (*flip)() = nullptr)
+{
+    sort();
+    if (flip != nullptr)
+        flip();
 }
 void displayLeaderboard()
 {
@@ -292,7 +321,7 @@ void modifyWords(char* wordsAdded,char* wordsRemoved)
 }
 void invalidInput()
 {
-    cout << RED_LETTERS << "Input is invalid. Choose a number between 1 and 3 from the options above." << RESET << endl;
+    cout << RED_LETTERS << "Input is invalid. Choose a number between 1 and 4 from the options above." << RESET << endl;
 }
 void exitFunc()
 {
@@ -413,11 +442,15 @@ void printASCIIart()
         << "    \\  /\\  / | |__| | | \\ \\| |__| | |____| |____ " << endl
         << "     \\/  \\/   \\____/|_|  \\_\\_____/|______|______|" << RESET << endl << endl;
 }
-void printStartingScreen()
+void printStartingScreen(void (*action)()=nullptr)
 {
     printASCIIart();
-    displayLeaderboard();
-    cout <<DARK_GREEN_LETTERS<< "1.Login as an existing user." << endl<< "2.Register a new user."<<RESET<<endl<< DARK_RED_LETTERS<< "3.Exit Program"<<RESET << endl;
+    if (action != nullptr)
+        action();
+    cout << DARK_GREEN_LETTERS << "1.Login as an existing user." << endl
+        << "2.Register a new user." << endl
+        << "3.Display leaderboard" << RESET << endl
+        << DARK_RED_LETTERS<< "4.Exit Program"<<RESET << endl;
 }
 void printAdminCommands(char* wordsAdded,char* wordsRemoved)
 {
@@ -538,6 +571,39 @@ void loginFunc(bool& isAdmin, char* username)
         isAdmin = true;
     cout << "Logged in as " << BLUE_LETTERS << username << RESET << endl;
 }
+void leaderboardFunc()
+{
+    int input = 0;
+    cout << BOLD << "1.Sort descending by Win Count" << endl
+        << "2.Sort ascending by Win Count" << endl
+        << "3.Sort descending by Win Rate" << endl
+        << "4.Sort ascending by Win Rate" <<RESET<< endl;
+    do
+    {
+        cout << "Enter your input:";
+        cin >> input;
+        switch (input)
+        {
+        case 1:
+            sortLeaderboard(sortByWinCount);
+            break;
+        case 2:
+            sortLeaderboard(sortByWinCount,flipRanking);
+            break;
+        case 3:
+            sortLeaderboard(sortByWinRate);
+            break;
+        case 4:
+            sortLeaderboard(sortByWinRate,flipRanking);
+            break;
+        default:
+            invalidInput();
+            break;
+        }
+    } while (input < 1 || input>4);
+    cout << CLEAR_SCREEN;
+    printStartingScreen(displayLeaderboard);
+}
 bool startingInput(const int n, bool& finishProgram, bool& isAdmin, char* username)
 {
     switch (n)
@@ -549,6 +615,9 @@ bool startingInput(const int n, bool& finishProgram, bool& isAdmin, char* userna
         registerFunc(username);
         return false;
     case 3:
+        leaderboardFunc();       
+        return true;
+    case 4:
         exitFunc(finishProgram);
         return false;
     default:
