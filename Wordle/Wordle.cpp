@@ -26,6 +26,20 @@ const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
 const char* YELLOW_LETTERS = "\033[38;5;220m";
+int getInfoFromLine(char* wholeLine, char* neededInfo, int startIndex, char endChar)
+{
+    int k = 0;
+    while (wholeLine[startIndex] != endChar && wholeLine[startIndex] != '\0')
+    {
+        neededInfo[k] = wholeLine[startIndex];
+        ++k;
+        ++startIndex;
+    }
+    neededInfo[k] = '\0';
+    if (wholeLine[startIndex] == endChar)
+        return startIndex + 1;
+    return startIndex;
+}
 void sortLeaderboard()
 {
     //sorting logic
@@ -33,38 +47,19 @@ void sortLeaderboard()
 void displayLeaderboard()
 {
     ifstream leaderboardFile("leaderboard.txt");
-    char wholeLine[32];
+    char wholeLine[64], user[32], games[10], wins[10];
+
     while (leaderboardFile >> wholeLine)
     {
         int i = 0;
-        cout << BLUE_LETTERS;
-        while (wholeLine[i] != '-')
-        {
-            cout << wholeLine[i];
-            i++;
-        }
-        cout << RESET;
-        i++;
-        cout <<"|" << YELLOW_LETTERS << "Games played - " << RESET;
-        cout << BLUE_LETTERS;
-        while (wholeLine[i] != '/')
-        {
-            cout << wholeLine[i];
-            i++;
-        }
-        cout << RESET;
-        cout<<"|" << GREEN_LETTERS << "Wins - " << RESET;
-        i++;
-        cout << BLUE_LETTERS;
-        while (wholeLine[i] != '\0')
-        {
-            cout << wholeLine[i];
-            i++;
-        }
-        cout << RESET;
-        cout << endl;
-    }
+        i = getInfoFromLine(wholeLine, user, i, '-');
+        i = getInfoFromLine(wholeLine, games, i, '/');
+        getInfoFromLine(wholeLine, wins, i, '\0');
 
+        cout << BLUE_LETTERS << user << RESET;
+        cout << "|" << YELLOW_LETTERS << "Games played - " << RESET << BLUE_LETTERS << games << RESET;
+        cout << "|" << GREEN_LETTERS << "Wins - " << RESET << BLUE_LETTERS << wins << RESET << endl;
+    }
 }
 int getLengthOfString(char* arr)
 {
@@ -122,53 +117,28 @@ void updateLeaderboards(char* username, bool hasWon)
         (void)rename("temp.txt", "leaderboard.txt");
         return;
     }
-    char wholeLine[32];
-    char existingUser[17];
+    char wholeLine[32], gamesPlayedStr[5], winsString[5], existingUser[17];
     bool isUserFound = false;
     while (leaderboardFile >> wholeLine)
     {
         int i = 0;
-        while (wholeLine[i] != '-')
-        {
-            existingUser[i] = wholeLine[i];
-            i++;
-        }
-        existingUser[i] = '\0';
+        i = getInfoFromLine(wholeLine, existingUser, i, '-');
+        i = getInfoFromLine(wholeLine, gamesPlayedStr, i, '/');
+        getInfoFromLine(wholeLine, winsString, i, '\0');
         if (areStringsSame(existingUser, username))
         {
             isUserFound = true;
-            i++;
-            char gamesPlayedStr[5];
-            int j = 0;
-            while (wholeLine[i] != '/')
-            {
-                gamesPlayedStr[j] = wholeLine[i];
-                ++j;++i;
-            }
-            gamesPlayedStr[j] = '\0';
-            int gamesPlayed = convertCharArrToInteger(gamesPlayedStr);
-            gamesPlayed++;
-            char winsString[5];
-            i++;
-            j = 0;
-            while (wholeLine[i] != '\0')
-            {
-                winsString[j] = wholeLine[i];
-                ++j;
-                ++i;
-            }
-            winsString[j] = '\0';
-            int winsTotal = convertCharArrToInteger(winsString);
+            int games = convertCharArrToInteger(gamesPlayedStr) + 1;
+            int wins = convertCharArrToInteger(winsString);
             if (hasWon)
-                winsTotal++;
-            tempFile << username << "-" << gamesPlayed << "/" << winsTotal << endl;
+                i++;
+            tempFile << username << "-" << games << "/" << wins << endl;
         }
         else
         {
             tempFile << wholeLine << endl;
         }
     }
-    leaderboardFile.clear();
     if (!isUserFound)
     {
         tempFile << username << "-1/" << (hasWon ? 1 : 0) << endl;
@@ -208,27 +178,34 @@ void enterUserWord(char* userWord)
         }
     }
 }
+bool checkWordInFile(const char* filename, char* target)
+{
+    ifstream file(filename);
+    char temp[32];
+    while (file >> temp)
+    {
+        if (areStringsSame(temp, target)) return true;
+    }
+    return false;
+}
+void addWordToList(char* list, char* newWord)
+{
+    int i = 0, j = 0;
+    while (list[i] != '\0') i++;
+    if (i > 0) list[i++] = ' ';
+    while (newWord[j] != '\0') list[i++] = newWord[j++];
+    list[i] = '\0';
+}
 void addWords(char* wordsAdded)
 {
     fstream wordsFile("words.txt", ios::in | ios::out | ios::app);
-    char existingWord[6], wordToAdd[32];
+    char wordToAdd[32];
     bool isWordValid = false;
     while (!isWordValid)
     {
         cout << "Enter word to add: " << endl;
         enterUserWord(wordToAdd);
-        bool exists = false;
-        wordsFile.clear();
-        wordsFile.seekg(0, ios::beg);
-        while (wordsFile >> existingWord)
-        {
-            if (areStringsSame(existingWord, wordToAdd))
-            {
-                exists = true;
-                break;
-            }
-        }
-        if (exists)
+        if (checkWordInFile("words.txt", wordToAdd))
         {
             cout << ERASE_LINE << ERASE_LINE;
             cout << RED_LETTERS << "Such a word already exists" << RESET << endl;
@@ -237,62 +214,36 @@ void addWords(char* wordsAdded)
         {
             wordsFile.clear();
             wordsFile.seekp(0, ios::end);
-            wordsFile << endl;
-            wordsFile << wordToAdd;
+            wordsFile << endl << wordToAdd;
+            cout << BLUE_LETTERS << wordToAdd << RESET << GREEN_LETTERS << " successfully added." << RESET << endl;
+            addWordToList(wordsAdded, wordToAdd);
             isWordValid = true;
-            cout << BLUE_LETTERS << wordToAdd << RESET << GREEN_LETTERS << " successfully added to the list." << RESET << endl;
         }
     }
-    int i = 0,j=0;
-    while (wordsAdded[i] != '\0')
-    {
-        ++i;
-    }
-    while (wordToAdd[j] != '\0')
-    {
-        wordsAdded[i] = wordToAdd[j];
-        ++i;
-        ++j;
-    }
-    wordsAdded[i] = ' ';
-    wordsAdded[i + 1] = '\0';
     wordsFile.close();
 }
 void removeWords(char* wordsRemoved)
 {
-    ifstream wordsFile("words.txt");
-    ofstream tempFile("temp.txt");
-    char existingWord[6], wordToRemove[32];
+    char wordToRemove[32], existingWord[32];
     bool isWordValid = false;
+
     while (!isWordValid)
     {
         cout << "Enter word to remove: " << endl;
         enterUserWord(wordToRemove);
 
-        bool exists = false;
-        wordsFile.clear();
-        wordsFile.seekg(0, ios::beg);
-        while (wordsFile >> existingWord)
+        if (checkWordInFile("words.txt", wordToRemove))
         {
-            if (areStringsSame(existingWord, wordToRemove))
-            {
-                exists = true;
-                break;
-            }
-        }
-        if (exists)
-        {
-            wordsFile.clear();
-            wordsFile.seekg(0, ios::beg);
+            ifstream wordsFile("words.txt");
+            ofstream tempFile("temp.txt");
             bool firstWord = true;
+
             while (wordsFile >> existingWord)
             {
                 if (!areStringsSame(existingWord, wordToRemove))
                 {
-                    if (!firstWord)
-                    {
+                    if (!firstWord) 
                         tempFile << endl;
-                    }
                     tempFile << existingWord;
                     firstWord = false;
                 }
@@ -303,26 +254,13 @@ void removeWords(char* wordsRemoved)
             (void)rename("temp.txt", "words.txt");
 
             cout << BLUE_LETTERS << wordToRemove << RESET << GREEN_LETTERS << " successfully removed." << RESET << endl;
-            int i = 0, j = 0;
-            while (wordsRemoved[i] != '\0')
-            {
-                ++i;
-            }
-            while (wordToRemove[j] != '\0')
-            {
-                wordsRemoved[i] = wordToRemove[j];
-                ++i;
-                ++j;
-            }
-            wordsRemoved[i] = ' ';
-            wordsRemoved[i + 1] = '\0';
-
+            addWordToList(wordsRemoved, wordToRemove);
             isWordValid = true;
         }
         else
         {
             cout << ERASE_LINE << ERASE_LINE;
-            cout << RED_LETTERS << "No such word exists in the list" << RESET << endl;
+            cout << RED_LETTERS << "No such word exists" << RESET << endl;
         }
     }
 }
@@ -358,6 +296,11 @@ void invalidInput()
 }
 void exitFunc()
 {
+    cout << BlINKING_RED_LETTERS << "Exiting Program..." << RESET << endl;
+}
+void exitFunc(bool& finishProgram)
+{
+    finishProgram = true;
     cout << BlINKING_RED_LETTERS << "Exiting Program..." << RESET << endl;
 }
 void adminCommands(int& adminInput,char* wordsAdded,char* wordsRemoved)
@@ -428,13 +371,9 @@ bool areStringsEqual(char* userWord, char* targetWord, char* hints, int i)
         if (userWord[i] != targetWord[i])
         {
             if (isCharContainedInArr(userWord[i], targetWord))
-            {
                 hints[i] = 'y';
-            }
             else
-            {
                 hints[i] = 'r';
-            }
             isTrue = false;
         }
         else
@@ -499,158 +438,105 @@ void printAdminCommands(char* wordsAdded,char* wordsRemoved)
         cout << RESET;
     }
 }
-void exitFunc(bool& finishProgram)
+bool isUsernameTaken(char* username)
 {
-    finishProgram = true;
-    cout << BlINKING_RED_LETTERS << "Exiting Program..." << RESET << endl;
+    ifstream usersFile("users.txt");
+    char line[64], extractedName[32];
+    while (usersFile >> line)
+    {
+        getInfoFromLine(line, extractedName, 0, '-');
+        if (areStringsSame(username, extractedName)) return true;
+    }
+    return false;
+}
+bool isPasswordValid(char* password)
+{
+    if (getLengthOfString(password) < 8)
+    {
+        cout << RED_LETTERS << "Password too short (min 8)!" << RESET << endl;
+        return false;
+    }
+    if (getLengthOfString(password) > 16)
+    {
+        cout << RED_LETTERS << "Password too long (max 16)!" << RESET << endl;
+        return false;
+    }
+    if (!doesStringHaveCapitalLetter(password))
+    {
+        cout << RED_LETTERS << "Must contain a capital letter!" << RESET << endl;
+        return false;
+    }
+    return true;
+}
+bool findUserPassword(char* username, char* password)
+{
+    ifstream usersFile("users.txt");
+    char line[64], fileUser[32];
+    while (usersFile >> line)
+    {
+        int i = getInfoFromLine(line, fileUser, 0, '-');
+        if (areStringsSame(username, fileUser))
+        {
+            getInfoFromLine(line, password, i, '\0');
+            return true;
+        }
+    }
+    return false;
 }
 void registerFunc(char* username)
 {
-    fstream usersFile("users.txt", ios::in | ios::out | ios::app);
-    bool isUsernameValid = false;
-    bool isPasswordValid = false;
-    char password[17];
-    char userFileInfo[34];
+    char password[32];
     cout << BOLD << ".REGISTERING NEW USER." << RESET << endl;
-    cout << RED_LETTERS << "Username must be between 3 - 16 letters!" << endl;
-    cout << "Password must be between 8 - 16 letters and include a capital letter!" << RESET << endl;
-    while (!isUsernameValid)
+    while (true)
     {
-        cout << "Enter username: ";
-        if (!cin.getline(username, 17))
-        {
-            cout << RED_LETTERS << "Username too long!"<<RESET<<endl;
-            cin.clear();
-            cin.ignore(1000, '\n');
-            continue;
-        }
-
+        cout << "Enter username (3-16 chars): ";
+        cin.getline(username, 17);
         if (getLengthOfString(username) < 3) {
-            cout << RED_LETTERS << "Username too short!" << RESET << endl;
-            continue;
+            cout << RED_LETTERS << "Too short!" << RESET << endl; continue;
         }
-        bool exists = false;
-        usersFile.clear();
-        usersFile.seekg(0, ios::beg);
-        while (usersFile >> userFileInfo)
-        {
-            char extractedName[17];
-            int i = 0;
-            while (userFileInfo[i] != '-') {
-                extractedName[i] = userFileInfo[i];
-                i++;
-            }
-            extractedName[i] = '\0';
-
-            if (areStringsSame(username, extractedName)) {
-                exists = true;
-                break;
-            }
+        if (isUsernameTaken(username)) {
+            cout << RED_LETTERS << "Username taken!" << RESET << endl; continue;
         }
-        if (exists) {
-            cout << RED_LETTERS << "Username already taken! Try another." << RESET << endl;
-        }
-        else {
-            isUsernameValid = true;
-        }
+        break;
     }
-    while (!isPasswordValid)
+    while (true)
     {
-        isPasswordValid = true;
         cout << "Enter password: ";
-        if (!cin.getline(password, 17))
-        {
-            cout << RED_LETTERS << "Password too long! ";
-            cin.clear();
-            cin.ignore(1000, '\n');
-            isPasswordValid = false;
-        }
-        else if (getLengthOfString(password) < 8)
-        {
-            cout << RED_LETTERS << "Password too short! ";
-            isPasswordValid = false;
-        }
-        if (!doesStringHaveCapitalLetter(password))
-        {
-            cout << RED_LETTERS << "Password must have capital letters!";
-            isPasswordValid = false;
-        }
-        if (!isPasswordValid)
-        {
-            cout << RESET << endl;
-        }
+        cin.getline(password, 17);
+        if (isPasswordValid(password)) break;
     }
-    usersFile.clear();
+    fstream usersFile("users.txt", ios::in | ios::out | ios::app);
     usersFile << username << "-" << password << endl;
+    usersFile.close();
     cout << CLEAR_SCREEN;
     printASCIIart();
-    cout << GREEN_LETTERS << "You registered successfully as " << RESET << BLUE_LETTERS << username << RESET << endl;
-    usersFile.close();
+    cout << GREEN_LETTERS << "Registered as " << BLUE_LETTERS << username << RESET << endl;
 }
 void loginFunc(bool& isAdmin, char* username)
 {
-    ifstream usersFile("users.txt");
-    bool isUsernameFound = false, isPasswordCorrect = false;
-    char password[17];
-    char existingUserInformation[34];
-    char existingUsername[17];
-    char existingPassword[17];
-    cout << BOLD << ".LOGGING IN EXISTING USER." << RESET << endl;
-    while (!isUsernameFound)
+    char password[32], existingPassword[32];
+    cout << BOLD << ".LOGGING IN." << RESET << endl;
+    while (true)
     {
         cout << "Enter username: ";
         cin.getline(username, 17);
-        while (usersFile >> existingUserInformation)
-        {
-            int i = 0;
-            while (existingUserInformation[i] != '-') {
-                existingUsername[i] = existingUserInformation[i];
-                i++;
-            }
-            existingUsername[i] = '\0';
-
-            int k = 0;
-            i++;
-            while (existingUserInformation[i] != '\0') {
-                existingPassword[k] = existingUserInformation[i];
-                i++;
-                k++;
-            }
-            existingPassword[k] = '\0';
-            if (areStringsSame(username, existingUsername))
-            {
-                isUsernameFound = true;
-                break;
-            }
-        }
-        if (!isUsernameFound)
-        {
-            cout << RED_LETTERS << "No such user exists. Try again." << RESET << endl;
-            usersFile.clear();
-            usersFile.seekg(0, ios::beg);
-        }
+        if (findUserPassword(username, existingPassword)) 
+            break;
+        cout << RED_LETTERS << "User not found." << RESET << endl;
     }
-    while (!isPasswordCorrect)
+    while (true)
     {
         cout << "Enter Password: ";
         cin.getline(password, 17);
-        if (areStringsSame(existingPassword, password))
-        {
-            isPasswordCorrect = true;
-        }
-        else
-        {
-            cout<< RED_LETTERS << "Incorrect password. Try again" << RESET << endl;
-        }
+        if (areStringsSame(existingPassword, password)) 
+            break;
+        cout << RED_LETTERS << "Incorrect password." << RESET << endl;
     }
     cout << CLEAR_SCREEN;
     printASCIIart();
-    if (areStringsSame(username,(char*)"administrator"))
-    {
+    if (areStringsSame(username, (char*)"administrator")) 
         isAdmin = true;
-    }
-    cout << "Succesfully logged in as "<<BLUE_LETTERS<<username<<RESET<<endl;
-    usersFile.close();
+    cout << "Logged in as " << BLUE_LETTERS << username << RESET << endl;
 }
 bool startingInput(const int n, bool& finishProgram, bool& isAdmin, char* username)
 {
@@ -708,8 +594,7 @@ int main()
     if (!isProgramFinished && !isAdmin)
     {
         cout << BOLD << "GUESS THE WORD" << endl << UNDERLINE << "ROUND" << RESET << BOLD << " 1" << RESET << endl;
-        char userWord[32];
-        char hints[WORD_LENGTH + 1];
+        char userWord[32], hints[WORD_LENGTH + 1];
         chooseRandomWordFromFile(wordToGuess);
         for (int i = 0; i < 6; i++)
         {
