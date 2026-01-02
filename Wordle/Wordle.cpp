@@ -26,7 +26,23 @@ const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
 const char* YELLOW_LETTERS = "\033[38;5;220m";
+struct Player
+{
+    char username[17];
+    int wins;
+    int gamesPlayed;
+    float winRate;
+};
+void swapPlayers(Player& playerOne, Player& playerTwo)
+{
+    Player temp = playerOne;
+    playerOne = playerTwo;
+    playerTwo = temp;
+}
 int getInfoFromLine(char* wholeLine, char* neededInfo, int startIndex, char endChar)
+//transfers info from a string from a given index to a given stopper char
+//example username-10/5
+//if we want username startIndex will be 0 and the stopper char will be '-'
 {
     int k = 0;
     while (wholeLine[startIndex] != endChar && wholeLine[startIndex] != '\0')
@@ -40,13 +56,38 @@ int getInfoFromLine(char* wholeLine, char* neededInfo, int startIndex, char endC
         return startIndex + 1;
     return startIndex;
 }
+void sort(int mode)//mode 1-win count    mode 2-win rate
+{
+    ifstream leaderboard("leaderboard.txt");
+    Player players[100];
+    char wholeLine[64], gamesPlayedStr[8], winsStr[8];
+    int counter = 0;
+
+    while (leaderboard >> wholeLine)
+    {
+        int i = 0;
+        i = getInfoFromLine(wholeLine, players[counter].username, i, '-');
+        i = getInfoFromLine(wholeLine, gamesPlayedStr, i, '/');
+        getInfoFromLine(wholeLine, winsStr, i, '\0');
+        players[counter].gamesPlayed = convertCharArrToInteger(gamesPlayedStr);
+        players[counter].wins = convertCharArrToInteger(winsStr);
+        players[counter].winRate = (float)players[counter].wins / players[counter].gamesPlayed;
+        ++counter;
+    }
+    //sort player arr
+    //sort arr
+    leaderboard.close();
+    ofstream leaderboard("leaderboard.txt");
+    //write sorted arr to file
+    leaderboard.close();
+}
 void sortByWinCount()
 {
-    //sort by wc
+    sort(1);
 }
 void sortByWinRate()
 {
-    //sort by wr
+    sort(2);
 }
 void flipRanking()
 {
