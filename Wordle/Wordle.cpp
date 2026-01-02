@@ -56,14 +56,45 @@ int getInfoFromLine(char* wholeLine, char* neededInfo, int startIndex, char endC
         return startIndex + 1;
     return startIndex;
 }
+int getLengthOfString(char* arr)
+{
+    int counter = 0;
+    while (arr[counter] != '\0')
+    {
+        counter++;
+    }
+    return counter;
+}
+int powerOfTen(int power)
+{
+    int num = 1;
+    while (power > 0)
+    {
+        num *= 10;
+        power--;
+    }
+    return num;
+}
+int convertCharArrToInteger(char* arr)
+{
+    int value = 0, i = 0;
+    int length = getLengthOfString(arr);
+    while (arr[i] != '\0')
+    {
+        value += (arr[i] - 48) * powerOfTen(length - 1);
+        length--;
+        i++;
+    }
+    return value;
+}
 void sort(int mode)//mode 1-win count    mode 2-win rate
 {
-    ifstream leaderboard("leaderboard.txt");
+    ifstream leaderboardRead("leaderboard.txt");
     Player players[100];
     char wholeLine[64], gamesPlayedStr[8], winsStr[8];
     int counter = 0;
 
-    while (leaderboard >> wholeLine)
+    while (leaderboardRead >> wholeLine)
     {
         int i = 0;
         i = getInfoFromLine(wholeLine, players[counter].username, i, '-');
@@ -74,12 +105,35 @@ void sort(int mode)//mode 1-win count    mode 2-win rate
         players[counter].winRate = (float)players[counter].wins / players[counter].gamesPlayed;
         ++counter;
     }
-    //sort player arr
-    //sort arr
-    leaderboard.close();
-    ofstream leaderboard("leaderboard.txt");
-    //write sorted arr to file
-    leaderboard.close();
+    for (int i = 0;i < counter - 1;i++)
+    {
+        for (int j = 0;j < counter - i - 1;j++)
+        {
+            if (mode == 1)
+            {
+                if (players[j].wins > players[j + 1].wins)
+                {
+                    swapPlayers(players[j], players[j + 1]);
+                }
+            }
+            else if (mode == 2)
+            {
+                if (players[j].winRate > players[j + 1].winRate)
+                {
+                    swapPlayers(players[j], players[j + 1]);
+                }
+            }
+        }
+    }
+    leaderboardRead.close();
+    ofstream leaderboardWrite("leaderboard.txt");
+    for (int i = 0;i < counter;i++)
+    {
+        leaderboardWrite << players[i].username << '-'
+            << players[i].gamesPlayed << '/'
+            << players[i].wins << endl;
+    }
+    leaderboardWrite.close();
 }
 void sortByWinCount()
 {
@@ -114,7 +168,7 @@ void sortLeaderboard(void (*sort)(), void (*flip)() = nullptr)
     if (flip != nullptr)
         flip();
 }
-void displayLeaderboard()
+void printLeaderboard()
 {
     ifstream leaderboardFile("leaderboard.txt");
     char wholeLine[64], user[32], games[10], wins[10];
@@ -131,15 +185,6 @@ void displayLeaderboard()
         cout << "|" << GREEN_LETTERS << "Wins - " << RESET << BLUE_LETTERS << wins << RESET << endl;
     }
 }
-int getLengthOfString(char* arr)
-{
-    int counter = 0;
-    while (arr[counter] != '\0')
-    {
-        counter++;
-    }
-    return counter;
-}
 bool areStringsSame(char* str1, char* str2)
 {
     int len1 = getLengthOfString(str1);
@@ -152,28 +197,6 @@ bool areStringsSame(char* str1, char* str2)
         if (str1[i] != str2[i]) return false;
     }
     return true;
-}
-int powerOfTen(int power)
-{
-    int num = 1;
-    while (power > 0)
-    {
-        num *= 10;
-        power--;
-    }
-    return num;
-}
-int convertCharArrToInteger(char* arr)
-{
-    int value = 0, i=0;
-    int length = getLengthOfString(arr);
-    while (arr[i] != '\0')
-    {
-        value += (arr[i] - 48) * powerOfTen(length-1);
-        length--;
-        i++;
-    }
-    return value;
 }
 void updateLeaderboards(char* username, bool hasWon)
 {
@@ -338,12 +361,13 @@ void modifyWords(char* wordsAdded,char* wordsRemoved)
 {
     bool isInputValid = false;
     int modifyInput;
-    cout << BOLD << "1.Add words" << endl << "2.Remove words" << endl<<"Enter your input: ";
-    cin >> modifyInput;
-    cin.clear();
-    cin.ignore(1000, '\n');
+    cout << BOLD << "1.Add words" << endl << "2.Remove words" << endl;
     while (!isInputValid)
     {
+        cout << "Enter your input: ";
+        cin >> modifyInput;
+        cin.clear();
+        cin.ignore(1000, '\n');
         if (modifyInput == 1)
         {
             addWords(wordsAdded);
@@ -373,7 +397,60 @@ void exitFunc(bool& finishProgram)
     finishProgram = true;
     cout << BlINKING_RED_LETTERS << "Exiting Program..." << RESET << endl;
 }
-void adminCommands(int& adminInput,char* wordsAdded,char* wordsRemoved)
+void printASCIIart()
+{
+    cout << BLINKING_GOLD
+        << " __          ______  _____  _____  _      ______ " << endl
+        << " \\ \\        / / __ \\|  __ \\|  __ \\| |    |  ____|" << endl
+        << "  \\ \\  /\\  / / |  | | |__) | |  | | |    | |__   " << endl
+        << "   \\ \\/  \\/ /| |  | |  _  /| |  | | |    |  __|  " << endl
+        << "    \\  /\\  / | |__| | | \\ \\| |__| | |____| |____ " << endl
+        << "     \\/  \\/   \\____/|_|  \\_\\_____/|______|______|" << RESET << endl << endl;
+}
+void printStartingScreen(void (*action)() = nullptr)
+{
+    printASCIIart();
+    if (action != nullptr)
+        action();
+    cout << DARK_GREEN_LETTERS << "1.Login as an existing user." << endl
+        << "2.Register a new user." << endl
+        << "3.Display leaderboard" << RESET << endl
+        << DARK_RED_LETTERS << "4.Exit Program" << RESET << endl;
+}
+void leaderboardFunc()
+{
+    int input = 0;
+    cout << BOLD << "1.Sort descending by Win Count" << endl
+        << "2.Sort ascending by Win Count" << endl
+        << "3.Sort descending by Win Rate" << endl
+        << "4.Sort ascending by Win Rate" << RESET << endl;
+    do
+    {
+        cout << "Enter your input:";
+        cin >> input;
+        switch (input)
+        {
+        case 1:
+            sortLeaderboard(sortByWinCount, flipRanking);
+            break;
+        case 2:
+            sortLeaderboard(sortByWinCount);
+            break;
+        case 3:
+            sortLeaderboard(sortByWinRate, flipRanking);
+            break;
+        case 4:
+            sortLeaderboard(sortByWinRate);
+            break;
+        default:
+            invalidInput();
+            break;
+        }
+    } while (input < 1 || input>4);
+    cout << CLEAR_SCREEN;
+    printStartingScreen(printLeaderboard);
+}
+void adminCommands(int& adminInput,char* wordsAdded,char* wordsRemoved,bool& displayLeaderboard)
 {
     switch (adminInput)
     {
@@ -381,6 +458,8 @@ void adminCommands(int& adminInput,char* wordsAdded,char* wordsRemoved)
         modifyWords(wordsAdded,wordsRemoved);
         break;
     case 2:
+        leaderboardFunc();
+        displayLeaderboard = true;
         break;
     case 3:
         exitFunc();
@@ -473,30 +552,16 @@ bool areStringsEqual(char* userWord, char* targetWord, char* hints, int i)
         cout << endl;
     return isTrue;
 }
-void printASCIIart()
-{
-    cout << BLINKING_GOLD
-        << " __          ______  _____  _____  _      ______ " << endl
-        << " \\ \\        / / __ \\|  __ \\|  __ \\| |    |  ____|" << endl
-        << "  \\ \\  /\\  / / |  | | |__) | |  | | |    | |__   " << endl
-        << "   \\ \\/  \\/ /| |  | |  _  /| |  | | |    |  __|  " << endl
-        << "    \\  /\\  / | |__| | | \\ \\| |__| | |____| |____ " << endl
-        << "     \\/  \\/   \\____/|_|  \\_\\_____/|______|______|" << RESET << endl << endl;
-}
-void printStartingScreen(void (*action)()=nullptr)
-{
-    printASCIIart();
-    if (action != nullptr)
-        action();
-    cout << DARK_GREEN_LETTERS << "1.Login as an existing user." << endl
-        << "2.Register a new user." << endl
-        << "3.Display leaderboard" << RESET << endl
-        << DARK_RED_LETTERS<< "4.Exit Program"<<RESET << endl;
-}
-void printAdminCommands(char* wordsAdded,char* wordsRemoved)
+
+void printAdminCommands(char* wordsAdded,char* wordsRemoved,bool& displayLeaderboard)
 {
     cout << CLEAR_SCREEN;
     printASCIIart();
+    if (displayLeaderboard)
+    {
+        printLeaderboard();
+        displayLeaderboard = false;
+    }
     cout << "Successfully logged in as " << BLUE_LETTERS<<"admin"<<RESET<<endl;
     cout << BLUE_LETTERS << "1.Modify word list" << endl << "2.Look at the leaderboard" << RESET << endl << DARK_RED_LETTERS << "3.Exit program" << RESET << endl;
     if (wordsAdded[0] != '\0')
@@ -612,39 +677,6 @@ void loginFunc(bool& isAdmin, char* username)
         isAdmin = true;
     cout << "Logged in as " << BLUE_LETTERS << username << RESET << endl;
 }
-void leaderboardFunc()
-{
-    int input = 0;
-    cout << BOLD << "1.Sort descending by Win Count" << endl
-        << "2.Sort ascending by Win Count" << endl
-        << "3.Sort descending by Win Rate" << endl
-        << "4.Sort ascending by Win Rate" <<RESET<< endl;
-    do
-    {
-        cout << "Enter your input:";
-        cin >> input;
-        switch (input)
-        {
-        case 1:
-            sortLeaderboard(sortByWinCount);
-            break;
-        case 2:
-            sortLeaderboard(sortByWinCount,flipRanking);
-            break;
-        case 3:
-            sortLeaderboard(sortByWinRate);
-            break;
-        case 4:
-            sortLeaderboard(sortByWinRate,flipRanking);
-            break;
-        default:
-            invalidInput();
-            break;
-        }
-    } while (input < 1 || input>4);
-    cout << CLEAR_SCREEN;
-    printStartingScreen(displayLeaderboard);
-}
 bool startingInput(const int n, bool& finishProgram, bool& isAdmin, char* username)
 {
     switch (n)
@@ -728,14 +760,15 @@ int main()
     {
         char wordsAdded[500]="", wordsRemoved[500]="";
         int adminInput = 0;
+        bool displayLeaderboard = false;
         while (adminInput != 3)
         {
-            printAdminCommands(wordsAdded,wordsRemoved);
+            printAdminCommands(wordsAdded,wordsRemoved,displayLeaderboard);
             cout << "Enter your input: ";
             cin >> adminInput;
             cin.clear();
             cin.ignore(1000, '\n');
-            adminCommands(adminInput,wordsAdded,wordsRemoved);
+            adminCommands(adminInput,wordsAdded,wordsRemoved,displayLeaderboard);
         }
     }
 }
