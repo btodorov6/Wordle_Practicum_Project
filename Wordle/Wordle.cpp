@@ -33,6 +33,16 @@ struct Player
     int gamesPlayed;
     float winRate;
 };
+bool clearInputStream()
+{
+    if (cin.fail())
+    {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        return true;
+    }
+    return false;
+}
 void swapPlayers(Player& playerOne, Player& playerTwo)
 {
     Player temp = playerOne;
@@ -254,7 +264,9 @@ void enterUserWord(char* userWord)
     bool isWordValid = false;
     while (!isWordValid)
     {
+
         cin.getline(userWord, 32);
+        clearInputStream();
         if (getLengthOfString(userWord) != 5)
         {
             cout << ERASE_LINE;
@@ -366,8 +378,7 @@ void modifyWords(char* wordsAdded,char* wordsRemoved)
     {
         cout << "Enter your input: ";
         cin >> modifyInput;
-        cin.clear();
-        cin.ignore(1000, '\n');
+        clearInputStream();
         if (modifyInput == 1)
         {
             addWords(wordsAdded);
@@ -428,6 +439,8 @@ void leaderboardFunc()
     {
         cout << "Enter your input:";
         cin >> input;
+        cin.clear();
+        cin.ignore(1000, '\n');
         switch (input)
         {
         case 1:
@@ -491,7 +504,7 @@ void printCharArr(char* arr)
     }
     cout << endl;
 }
-bool isCharContainedInArr(char c, char* arr)
+bool isCharContainedInArr(char c,const char* arr)
 {
     for (int i = 0; i < WORD_LENGTH; i++)
     {
@@ -512,8 +525,13 @@ void printLoseText(char* correctWord)
     printCharArr(correctWord);
     cout << RESET;
 }
-bool areStringsEqual(char* userWord, char* targetWord, char* hints, int i)
+bool areStringsEqual(char* userWord,const char* targetWord, char* hints, int i)
 {
+    char copy[WORD_LENGTH+1];
+    for (int k = 0;k < WORD_LENGTH;k++)
+    {
+        copy[k] = targetWord[k];
+    }
     bool isTrue = true;
     for (int i = 0; i < WORD_LENGTH; i++)
     {
@@ -630,6 +648,10 @@ void registerFunc(char* username)
     {
         cout << "Enter username (3-16 chars): ";
         cin.getline(username, 17);
+        if (clearInputStream())
+        {
+            cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
+        }
         if (getLengthOfString(username) < 3) {
             cout << RED_LETTERS << "Too short!" << RESET << endl; continue;
         }
@@ -642,6 +664,10 @@ void registerFunc(char* username)
     {
         cout << "Enter password: ";
         cin.getline(password, 17);
+        if (clearInputStream())
+        {
+            cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
+        }
         if (isPasswordValid(password)) break;
     }
     fstream usersFile("users.txt", ios::in | ios::out | ios::app);
@@ -659,6 +685,10 @@ void loginFunc(bool& isAdmin, char* username)
     {
         cout << "Enter username: ";
         cin.getline(username, 17);
+        if (clearInputStream())
+        {
+            cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
+        }
         if (findUserPassword(username, existingPassword)) 
             break;
         cout << RED_LETTERS << "User not found." << RESET << endl;
@@ -667,6 +697,10 @@ void loginFunc(bool& isAdmin, char* username)
     {
         cout << "Enter Password: ";
         cin.getline(password, 17);
+        if (clearInputStream())
+        {
+            cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
+        }
         if (areStringsSame(existingPassword, password)) 
             break;
         cout << RED_LETTERS << "Incorrect password." << RESET << endl;
@@ -725,7 +759,7 @@ int main()
     char wordToGuess[WORD_LENGTH + 1];
     bool isProgramFinished = false, isAdmin = false;
     int chooseStartingOperation = 0;
-    char username[17];
+    char username[100];
     do {
         cout << "Enter your input: ";
         cin >> chooseStartingOperation;
