@@ -759,7 +759,7 @@ int main()
     char wordToGuess[WORD_LENGTH + 1];
     bool isProgramFinished = false, isAdmin = false;
     int chooseStartingOperation = 0;
-    char username[100];
+    char username[17];
     do {
         cout << "Enter your input: ";
         cin >> chooseStartingOperation;
