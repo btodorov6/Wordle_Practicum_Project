@@ -535,17 +535,30 @@ bool areStringsEqual(char* userWord,const char* targetWord, char* hints, int i)
     bool isTrue = true;
     for (int i = 0; i < WORD_LENGTH; i++)
     {
-        if (userWord[i] != targetWord[i])
+        if (userWord[i] == copy[i])
         {
-            if (isCharContainedInArr(userWord[i], targetWord))
-                hints[i] = 'y';
-            else
-                hints[i] = 'r';
-            isTrue = false;
+            hints[i] = 'g';
+            copy[i] = '*';
         }
         else
         {
-            hints[i] = 'g';
+            hints[i] = 'r';
+            isTrue = false;
+        }
+    }
+    for (int i = 0; i < WORD_LENGTH; i++)
+    {
+        if (hints[i] == 'r')
+        {
+            for (int j = 0;j < WORD_LENGTH;j++)
+            {
+                if (userWord[i] == copy[j])
+                {
+                    hints[i] = 'y';
+                    copy[j] = '*';
+                    break;
+                }
+            }
         }
     }
     cout << ERASE_LINE;
@@ -770,7 +783,7 @@ int main()
     if (!isProgramFinished && !isAdmin)
     {
         cout << BOLD << "GUESS THE WORD" << endl << UNDERLINE << "ROUND" << RESET << BOLD << " 1" << RESET << endl;
-        char userWord[32], hints[WORD_LENGTH + 1];
+        char userWord[32], hints[WORD_LENGTH + 1] = { 'r','r','r','r','r' };
         chooseRandomWordFromFile(wordToGuess);
         for (int i = 0; i < 6; i++)
         {
