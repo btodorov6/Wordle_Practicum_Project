@@ -549,7 +549,30 @@ void printLoseText(char* correctWord)
     printCharArr(correctWord);
     cout << RESET;
 }
-bool areStringsEqual(char* userWord,const char* targetWord, char* hints, int i)
+void displayHints(char* hints, char* userWord, bool isTrue, int round)
+{
+    cout << ERASE_LINE;
+    for (int i = 0; i < WORD_LENGTH; i++)
+    {
+        if (hints[i] == 'g')
+        {
+            cout << GREEN << userWord[i] << RESET;
+        }
+        else if (hints[i] == 'y')
+        {
+            cout << YELLOW << userWord[i] << RESET;
+        }
+        else
+        {
+            cout << RED << userWord[i] << RESET;
+        }
+    }
+    if (isTrue == false && round < 7)
+        cout << endl << BOLD << UNDERLINE << "ROUND" << RESET << BOLD << ' ' << round << RESET << endl;
+    else
+        cout << endl;
+}
+bool checkGuess(char* userWord,const char* targetWord, char* hints, int round)
 {
     char copy[WORD_LENGTH+1];
     for (int k = 0; k < WORD_LENGTH; k++)
@@ -574,7 +597,7 @@ bool areStringsEqual(char* userWord,const char* targetWord, char* hints, int i)
     {
         if (hints[i] == 'r')
         {
-            for (int j = 0;j < WORD_LENGTH;j++)
+            for (int j = 0; j < WORD_LENGTH; j++)
             {
                 if (userWord[i] == copy[j])
                 {
@@ -585,26 +608,7 @@ bool areStringsEqual(char* userWord,const char* targetWord, char* hints, int i)
             }
         }
     }
-    cout << ERASE_LINE;
-    for (int i = 0; i < WORD_LENGTH; i++)
-    {
-        if (hints[i] == 'g')
-        {
-            cout << GREEN << userWord[i] << RESET;
-        }
-        else if (hints[i] == 'y')
-        {
-            cout << YELLOW << userWord[i] << RESET;
-        }
-        else
-        {
-            cout << RED << userWord[i] << RESET;
-        }
-    }
-    if (isTrue == false && i < 7)
-        cout << endl << BOLD << UNDERLINE << "ROUND" << RESET << BOLD << ' ' << i << RESET << endl;
-    else
-        cout << endl;
+    displayHints(hints, userWord, isTrue, round);
     return isTrue;
 }
 
@@ -803,7 +807,7 @@ void playGame(char* username)
         {
             enterUserWord(userWord);
 
-            if (areStringsEqual(userWord, wordToGuess, hints, i + 2))
+            if (checkGuess(userWord, wordToGuess, hints, i + 2))
             {
                 updateLeaderboards(username, true);
                 printWinText();
