@@ -1,3 +1,17 @@
+/**
+*
+* Solution to course project #9
+* Introduction to programming course
+* Faculty of Mathematics and Informatics of Sofia University
+* Winter semester 2025/2026
+*
+* @author <Boris Todorov>
+* @idnumber <0MI0600581>
+* @compiler <VC>
+*
+* Main file with game logic
+*
+*/
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -26,9 +40,18 @@ const char* ERASE_LINE = "\033[1A\033[2K";
 const char* CLEAR_SCREEN = "\033[2J\033[H";
 const char* BLINKING_GOLD = "\033[5;38;5;220m";
 const char* YELLOW_LETTERS = "\033[38;5;220m";
+const int MAX_USERNAME = 17;
+const int MAX_PLAYERS = 100;
+const int LINE_BUFFER_SIZE = 64;
+const int INFO_BUFFER_SIZE = 8;
+const int USER_INFO_SIZE = 32;
+const int BUFFER_WORDS_ARRAYS = 500;
+const int BUFFER_WORD_INPUT = 32;
+const int BUFFER_PASSWORD_INPUT = 32;
+const int ROUNDS_COUNT = 6;
 struct Player
 {
-    char username[17];
+    char username[MAX_USERNAME];
     int wins;
     int gamesPlayed;
     float winRate;
@@ -100,8 +123,8 @@ int convertCharArrToInteger(char* arr)
 void sort(int mode)//mode 1-win count    mode 2-win rate
 {
     ifstream leaderboardRead("leaderboard.txt");
-    Player players[100];
-    char wholeLine[64], gamesPlayedStr[8], winsStr[8];
+    Player players[MAX_PLAYERS];
+    char wholeLine[LINE_BUFFER_SIZE], gamesPlayedStr[INFO_BUFFER_SIZE], winsStr[INFO_BUFFER_SIZE];
     int counter = 0;
 
     while (leaderboardRead >> wholeLine)
@@ -115,9 +138,9 @@ void sort(int mode)//mode 1-win count    mode 2-win rate
         players[counter].winRate = (float)players[counter].wins / players[counter].gamesPlayed;
         ++counter;
     }
-    for (int i = 0;i < counter - 1;i++)
+    for (int i = 0; i < counter - 1; i++)
     {
-        for (int j = 0;j < counter - i - 1;j++)
+        for (int j = 0; j < counter - i - 1; j++)
         {
             if (mode == 1)
             {
@@ -137,7 +160,7 @@ void sort(int mode)//mode 1-win count    mode 2-win rate
     }
     leaderboardRead.close();
     ofstream leaderboardWrite("leaderboard.txt");
-    for (int i = 0;i < counter;i++)
+    for (int i = 0; i < counter; i++)
     {
         leaderboardWrite << players[i].username << '-'
             << players[i].gamesPlayed << '/'
@@ -158,13 +181,13 @@ void flipRanking()
     ifstream leaderboard("leaderboard.txt");
     ofstream temp("temp.txt");
     int linesCount = 0;
-    char leaderboardStrings[100][32];
+    char leaderboardStrings[MAX_PLAYERS][USER_INFO_SIZE];
     while (leaderboard >> leaderboardStrings[linesCount])
     {
         ++linesCount;
     }
     leaderboard.close();
-    for (int i = linesCount - 1;i >= 0;i--)
+    for (int i = linesCount - 1; i >= 0; i--)
     {
         temp << leaderboardStrings[i] << endl;
     }
@@ -181,7 +204,7 @@ void sortLeaderboard(void (*sort)(), void (*flip)() = nullptr)
 void printLeaderboard()
 {
     ifstream leaderboardFile("leaderboard.txt");
-    char wholeLine[64], user[32], games[10], wins[10];
+    char wholeLine[LINE_BUFFER_SIZE], user[USER_INFO_SIZE], games[10], wins[10];
 
     while (leaderboardFile >> wholeLine)
     {
@@ -220,7 +243,7 @@ void updateLeaderboards(char* username, bool hasWon)
         (void)rename("temp.txt", "leaderboard.txt");
         return;
     }
-    char wholeLine[32], gamesPlayedStr[5], winsString[5], existingUser[17];
+    char wholeLine[USER_INFO_SIZE], gamesPlayedStr[5], winsString[5], existingUser[MAX_USERNAME];
     bool isUserFound = false;
     while (leaderboardFile >> wholeLine)
     {
@@ -265,7 +288,7 @@ void enterUserWord(char* userWord)
     while (!isWordValid)
     {
 
-        cin.getline(userWord, 32);
+        cin.getline(userWord, USER_INFO_SIZE);
         clearInputStream();
         if (getLengthOfString(userWord) != 5)
         {
@@ -286,7 +309,7 @@ void enterUserWord(char* userWord)
 bool checkWordInFile(const char* filename, char* target)
 {
     ifstream file(filename);
-    char temp[32];
+    char temp[USER_INFO_SIZE];
     while (file >> temp)
     {
         if (areStringsSame(temp, target)) return true;
@@ -304,7 +327,7 @@ void addWordToList(char* list, char* newWord)
 void addWords(char* wordsAdded)
 {
     fstream wordsFile("words.txt", ios::in | ios::out | ios::app);
-    char wordToAdd[32];
+    char wordToAdd[BUFFER_WORD_INPUT];
     bool isWordValid = false;
     while (!isWordValid)
     {
@@ -329,7 +352,7 @@ void addWords(char* wordsAdded)
 }
 void removeWords(char* wordsRemoved)
 {
-    char wordToRemove[32], existingWord[32];
+    char wordToRemove[BUFFER_WORD_INPUT], existingWord[BUFFER_WORD_INPUT];
     bool isWordValid = false;
 
     while (!isWordValid)
@@ -528,7 +551,7 @@ void printLoseText(char* correctWord)
 bool areStringsEqual(char* userWord,const char* targetWord, char* hints, int i)
 {
     char copy[WORD_LENGTH+1];
-    for (int k = 0;k < WORD_LENGTH;k++)
+    for (int k = 0; k < WORD_LENGTH; k++)
     {
         copy[k] = targetWord[k];
     }
@@ -611,7 +634,7 @@ void printAdminCommands(char* wordsAdded,char* wordsRemoved,bool& displayLeaderb
 bool isUsernameTaken(char* username)
 {
     ifstream usersFile("users.txt");
-    char line[64], extractedName[32];
+    char line[LINE_BUFFER_SIZE], extractedName[USER_INFO_SIZE];
     while (usersFile >> line)
     {
         getInfoFromLine(line, extractedName, 0, '-');
@@ -641,7 +664,7 @@ bool isPasswordValid(char* password)
 bool findUserPassword(char* username, char* password)
 {
     ifstream usersFile("users.txt");
-    char line[64], fileUser[32];
+    char line[LINE_BUFFER_SIZE], fileUser[USER_INFO_SIZE];
     while (usersFile >> line)
     {
         int i = getInfoFromLine(line, fileUser, 0, '-');
@@ -655,12 +678,12 @@ bool findUserPassword(char* username, char* password)
 }
 void registerFunc(char* username)
 {
-    char password[32];
+    char password[BUFFER_PASSWORD_INPUT];
     cout << BOLD << ".REGISTERING NEW USER." << RESET << endl;
     while (true)
     {
         cout << "Enter username (3-16 chars): ";
-        cin.getline(username, 17);
+        cin.getline(username, MAX_USERNAME);
         if (clearInputStream())
         {
             cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
@@ -676,7 +699,7 @@ void registerFunc(char* username)
     while (true)
     {
         cout << "Enter password: ";
-        cin.getline(password, 17);
+        cin.getline(password, MAX_USERNAME);
         if (clearInputStream())
         {
             cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
@@ -692,12 +715,12 @@ void registerFunc(char* username)
 }
 void loginFunc(bool& isAdmin, char* username)
 {
-    char password[32], existingPassword[32];
+    char password[BUFFER_PASSWORD_INPUT], existingPassword[BUFFER_PASSWORD_INPUT];
     cout << BOLD << ".LOGGING IN." << RESET << endl;
     while (true)
     {
         cout << "Enter username: ";
-        cin.getline(username, 17);
+        cin.getline(username, MAX_USERNAME);
         if (clearInputStream())
         {
             cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
@@ -709,7 +732,7 @@ void loginFunc(bool& isAdmin, char* username)
     while (true)
     {
         cout << "Enter Password: ";
-        cin.getline(password, 17);
+        cin.getline(password, MAX_USERNAME);
         if (clearInputStream())
         {
             cout << RED_LETTERS << "Too long!" << RESET << endl; continue;
@@ -749,7 +772,7 @@ void chooseRandomWordFromFile(char* word)
 {
     ifstream wordFile("words.txt");
     int wordCount = 0;
-    char tempWord[6] = "";
+    char tempWord[WORD_LENGTH+1] = "";
     while (wordFile >> tempWord)
     {
         wordCount++;
@@ -772,7 +795,7 @@ int main()
     char wordToGuess[WORD_LENGTH + 1];
     bool isProgramFinished = false, isAdmin = false;
     int chooseStartingOperation = 0;
-    char username[17];
+    char username[MAX_USERNAME];
     do {
         cout << "Enter your input: ";
         cin >> chooseStartingOperation;
@@ -783,9 +806,9 @@ int main()
     if (!isProgramFinished && !isAdmin)
     {
         cout << BOLD << "GUESS THE WORD" << endl << UNDERLINE << "ROUND" << RESET << BOLD << " 1" << RESET << endl;
-        char userWord[32], hints[WORD_LENGTH + 1] = { 'r','r','r','r','r' };
+        char userWord[BUFFER_WORD_INPUT], hints[WORD_LENGTH + 1] = { 'r','r','r','r','r' };
         chooseRandomWordFromFile(wordToGuess);
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < ROUNDS_COUNT; i++)
         {
             enterUserWord(userWord);
             if (areStringsEqual(userWord, wordToGuess, hints, i + 2))
@@ -794,7 +817,7 @@ int main()
                 printWinText();
                 break;
             }
-            else if (i == 5)
+            else if (i == ROUNDS_COUNT-1)
             {
                 updateLeaderboards(username, false);
                 printLoseText(wordToGuess);
@@ -805,7 +828,7 @@ int main()
 
     if (isAdmin)
     {
-        char wordsAdded[500]="", wordsRemoved[500]="";
+        char wordsAdded[BUFFER_WORDS_ARRAYS]="", wordsRemoved[BUFFER_WORDS_ARRAYS]="";
         int adminInput = 0;
         bool displayLeaderboard = false;
         while (adminInput != 3)
