@@ -56,6 +56,7 @@ struct Player
     int gamesPlayed;
     float winRate;
 };
+
 bool clearInputStream()
 {
     if (cin.fail())
@@ -257,7 +258,7 @@ void updateLeaderboards(char* username, bool hasWon)
             int games = convertCharArrToInteger(gamesPlayedStr) + 1;
             int wins = convertCharArrToInteger(winsString);
             if (hasWon)
-                i++;
+                wins++;
             tempFile << username << "-" << games << "/" << wins << endl;
         }
         else
@@ -540,7 +541,7 @@ bool isCharContainedInArr(char c,const char* arr)
 }
 void printWinText()
 {
-    cout << GREEN_LETTERS << "You guessed the word" << RESET;
+    cout << GREEN_LETTERS << "You guessed the word" << RESET << endl;
 }
 void printLoseText(char* correctWord)
 {
@@ -788,14 +789,63 @@ void chooseRandomWordFromFile(char* word)
     wordFile.close();
 }
 
+void playGame(char* username)
+{
+    char wordToGuess[WORD_LENGTH + 1], userWord[BUFFER_WORD_INPUT], hints[WORD_LENGTH + 1] = { 'r','r','r','r','r' };
+    bool hasWon = false;
+    char playAgain = 'y';
+    while (playAgain == 'y' || playAgain == 'Y')
+    {
+        cout << CLEAR_SCREEN;
+        cout << BOLD << "GUESS THE WORD" << endl << UNDERLINE << "ROUND" << RESET << BOLD << " 1" << RESET << endl;
+        chooseRandomWordFromFile(wordToGuess);
+        for (int i = 0; i < ROUNDS_COUNT; i++)
+        {
+            enterUserWord(userWord);
+
+            if (areStringsEqual(userWord, wordToGuess, hints, i + 2))
+            {
+                updateLeaderboards(username, true);
+                printWinText();
+                hasWon = true;
+                break;
+            }
+            else if (i == ROUNDS_COUNT - 1 && !hasWon)
+            {
+                updateLeaderboards(username, false);
+                printLoseText(wordToGuess);
+            }
+        }
+        cout << BOLD << "Play again? (y/n): " << RESET;
+        cin >> playAgain;
+        cin.ignore(1000, '\n');
+        cin.clear();
+    }
+}
+void playAsAdmin()
+{
+    char wordsAdded[BUFFER_WORDS_ARRAYS] = "", wordsRemoved[BUFFER_WORDS_ARRAYS] = "";
+    int adminInput = 0;
+    bool displayLeaderboard = false;
+    while (adminInput != 3)
+    {
+        printAdminCommands(wordsAdded, wordsRemoved, displayLeaderboard);
+        cout << "Enter your input: ";
+        cin >> adminInput;
+        cin.clear();
+        cin.ignore(1000, '\n');
+        adminCommands(adminInput, wordsAdded, wordsRemoved, displayLeaderboard);
+    }
+}
+
 int main()
 {
     srand((unsigned int)time(0));
-    printStartingScreen();
     char wordToGuess[WORD_LENGTH + 1];
     bool isProgramFinished = false, isAdmin = false;
     int chooseStartingOperation = 0;
     char username[MAX_USERNAME];
+    printStartingScreen();
     do {
         cout << "Enter your input: ";
         cin >> chooseStartingOperation;
@@ -803,42 +853,15 @@ int main()
         cin.ignore(1000, '\n');
     } while (startingInput(chooseStartingOperation, isProgramFinished, isAdmin, username));
 
-    if (!isProgramFinished && !isAdmin)
+    if (!isProgramFinished)
     {
-        cout << BOLD << "GUESS THE WORD" << endl << UNDERLINE << "ROUND" << RESET << BOLD << " 1" << RESET << endl;
-        char userWord[BUFFER_WORD_INPUT], hints[WORD_LENGTH + 1] = { 'r','r','r','r','r' };
-        chooseRandomWordFromFile(wordToGuess);
-        for (int i = 0; i < ROUNDS_COUNT; i++)
+        if (isAdmin)
         {
-            enterUserWord(userWord);
-            if (areStringsEqual(userWord, wordToGuess, hints, i + 2))
-            {
-                updateLeaderboards(username, true);
-                printWinText();
-                break;
-            }
-            else if (i == ROUNDS_COUNT-1)
-            {
-                updateLeaderboards(username, false);
-                printLoseText(wordToGuess);
-                break;
-            }
+            playAsAdmin();
         }
-    }
-
-    if (isAdmin)
-    {
-        char wordsAdded[BUFFER_WORDS_ARRAYS]="", wordsRemoved[BUFFER_WORDS_ARRAYS]="";
-        int adminInput = 0;
-        bool displayLeaderboard = false;
-        while (adminInput != 3)
+        else
         {
-            printAdminCommands(wordsAdded,wordsRemoved,displayLeaderboard);
-            cout << "Enter your input: ";
-            cin >> adminInput;
-            cin.clear();
-            cin.ignore(1000, '\n');
-            adminCommands(adminInput,wordsAdded,wordsRemoved,displayLeaderboard);
+            playGame(username);
         }
     }
 }
