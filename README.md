@@ -10,6 +10,6 @@ Features:
 
 -Leaderboard that tracks every user's games played and wins. It can be sorted by winrate and win count in the game.
 
--Logging in as admin give acces to a special menu for adding and removing words from the list. 
+-Logging in as admin give access to a special menu for adding and removing words from the list. 
 
 *Login credentials for admin - username: administrator, password: Adminpassword123
